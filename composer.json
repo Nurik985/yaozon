@@ -1,0 +1,25 @@
+{
+    "name": "nur/yaozon",
+    "autoload": {
+        "psr-4": {
+            "Nur\\Yaozon\\": "vendor/yaozon/src/"
+        },
+        "files": [
+            "helpers/functions.php"
+        ]
+    },
+    "authors": [
+        {
+            "name": "Nurik985",
+            "email": "onurik1985@gmail.com"
+        }
+    ],
+    "config": {
+        "platform-check": false
+    },
+    "require": {
+        "guzzlehttp/guzzle": "^7.4",
+        "monolog/monolog": "^3.1",
+        "vlucas/phpdotenv": "^5.4"
+    }
+}
