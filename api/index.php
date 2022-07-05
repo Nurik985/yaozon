@@ -21,7 +21,7 @@ if(!empty($_REQUEST['auth-token']) &&  $_REQUEST['auth-token'] == getenv('YANDEX
         $log->debug('Stock  ==>: '. $json);
 
         $client = new GuzzleHttp\Client();
-        $response = $client->request('POST', "http://talant-web.ru/domostroy/yaozon/tools/select_count.php", [
+        $response = $client->request('POST', getenv('URL_STOCKS'), [
             'body' => $json,
             'headers' => ['Content-Type' => 'application/json']
         ]);
@@ -55,7 +55,7 @@ if(!empty($_REQUEST['auth-token']) &&  $_REQUEST['auth-token'] == getenv('YANDEX
         $log->debug('Cart ==>: '. $json);
 
         $client = new GuzzleHttp\Client();
-        $response = $client->request('POST', "http://talant-web.ru/domostroy/yaozon/tools/select_count.php", [
+        $response = $client->request('POST', getenv('URL_CART'), [
             'body' => $json,
             'headers' => ['Content-Type' => 'application/json']
         ]);
@@ -75,7 +75,7 @@ if(!empty($_REQUEST['auth-token']) &&  $_REQUEST['auth-token'] == getenv('YANDEX
         $log->debug('Order/accept ==>: '. $json);
 
         $client = new GuzzleHttp\Client();
-        $response = $client->request('POST', "http://talant-web.ru/domostroy/yaozon/tools/table_zakazy_yandex.php", [
+        $response = $client->request('POST', getenv('URL_ORDER_ACCEPT'), [
             'body' => $json,
             'headers' => ['Content-Type' => 'application/json']
         ]);
