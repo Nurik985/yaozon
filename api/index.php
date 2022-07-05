@@ -18,7 +18,7 @@ if(!empty($_REQUEST['auth-token']) &&  $_REQUEST['auth-token'] == getenv('YANDEX
     $json = file_get_contents('php://input');
 
     if($_REQUEST['action'] == 'stocks') {
-        $log->debug('Stock: '. $json);
+        $log->debug('Stock  ==>: '. $json);
 
         $client = new GuzzleHttp\Client();
         $response = $client->request('POST', "http://talant-web.ru/domostroy/yaozon/tools/select_count.php", [
@@ -28,7 +28,7 @@ if(!empty($_REQUEST['auth-token']) &&  $_REQUEST['auth-token'] == getenv('YANDEX
 
         $res = json_decode($response->getBody()->getContents(), 1);
 
-        $log->debug('Ответ для Stock: '. $json);
+        $log->debug('Ответ для Stock  <==:  '. json_encode($res));
 
         $nData = [];
 
@@ -50,5 +50,45 @@ if(!empty($_REQUEST['auth-token']) &&  $_REQUEST['auth-token'] == getenv('YANDEX
         }
     }
 
+    if($_REQUEST['action'] == 'cart'){
+
+        $log->debug('Cart ==>: '. $json);
+
+        $client = new GuzzleHttp\Client();
+        $response = $client->request('POST', "http://talant-web.ru/domostroy/yaozon/tools/select_count.php", [
+            'body' => $json,
+            'headers' => ['Content-Type' => 'application/json']
+        ]);
+
+        $res = json_decode($response->getBody()->getContents(), 1);
+
+        $otvet['cart'] = $res;
+
+        $log->debug('Ответ для Cart  <==: '. json_encode($otvet));
+
+        echo json_encode($otvet);
+
+    }
+
+    if($_REQUEST['action'] == 'order/accept'){
+
+        $log->debug('Order/accept ==>: '. $json);
+
+        $client = new GuzzleHttp\Client();
+        $response = $client->request('POST', "http://talant-web.ru/domostroy/yaozon/tools/table_zakazy_yandex.php", [
+            'body' => $json,
+            'headers' => ['Content-Type' => 'application/json']
+        ]);
+
+        $res = json_decode($response->getBody()->getContents(), 1);
+
+        $otvet = [];
+        $otvet["order"]["accepted"] = true;
+        $otvet["order"]["id"] = $res['id_zayav'][0];
+
+        $log->debug('Ответ для Order/accept  <==: '. json_encode($otvet));
+
+        echo json_encode($otvet);
+    }
 }
 
