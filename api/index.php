@@ -41,16 +41,19 @@ $logOrderAccept->pushHandler(new StreamHandler(__DIR__ .'/../logs/order-accept.l
 $logOrderStatus= new Logger('Debug');
 $logOrderStatus->pushHandler(new StreamHandler(__DIR__ .'/../logs/order-status.log', Level::Debug));
 
-$logGetMarketSku= new Logger('Debug');
-$logGetMarketSku->pushHandler(new StreamHandler(__DIR__ .'/../logs/get-market-sku.log', Level::Debug));
+$logGet= new Logger('Debug');
+$logGet->pushHandler(new StreamHandler(__DIR__ .'/../logs/get-data.log', Level::Debug));
+
+$logUpdate= new Logger('Debug');
+$logUpdate->pushHandler(new StreamHandler(__DIR__ .'/../logs/priceUpdate.log', Level::Debug));
 
 if(!empty($_REQUEST['auth-token']) &&  $_REQUEST['auth-token'] == $env['YANDEX_AUTH_TOKEN']) {
 
     $json = file_get_contents('php://input');
 
-    if($env['DEBUG']){ $logRequest->debug('Request ==>: '. json_encode($_REQUEST)); }
+    if ($env['DEBUG']) { $logRequest->debug('Request ==>: '. json_encode($_REQUEST)); }
 
-    if($_REQUEST['action'] === 'stocks') {
+    if ($_REQUEST['action'] === 'stocks') {
 
         //if($env['DEBUG']){ $logStocks->debug('Stock  ==>: '. $json); }
 
@@ -85,7 +88,7 @@ if(!empty($_REQUEST['auth-token']) &&  $_REQUEST['auth-token'] == $env['YANDEX_A
         }
     }
 
-    if($_REQUEST['action'] === 'cart'){
+    if ($_REQUEST['action'] === 'cart') {
 
         if($env['DEBUG']){ $logCart->debug('Cart ==>: '. $json); }
 
@@ -120,7 +123,7 @@ if(!empty($_REQUEST['auth-token']) &&  $_REQUEST['auth-token'] == $env['YANDEX_A
 
     }
 
-    if($_REQUEST['action'] === 'order/accept'){
+    if ($_REQUEST['action'] === 'order/accept') {
 
         if($env['DEBUG']){ $logOrderAccept->debug('Order/accept ==>: '. $json); }
 
@@ -141,7 +144,7 @@ if(!empty($_REQUEST['auth-token']) &&  $_REQUEST['auth-token'] == $env['YANDEX_A
         echo json_encode($otvet);
     }
 
-    if($_REQUEST['action'] === 'order/status'){
+    if ($_REQUEST['action'] === 'order/status') {
 
         $order = json_decode($json, 1);
 
@@ -178,7 +181,7 @@ if(!empty($_REQUEST['auth-token']) &&  $_REQUEST['auth-token'] == $env['YANDEX_A
         }
     }
 
-    if($_REQUEST['action'] === 'order/cancelled'){
+    if ($_REQUEST['action'] === 'order/cancelled') {
 
         $order = json_decode($json, 1);
 
@@ -197,7 +200,7 @@ if(!empty($_REQUEST['auth-token']) &&  $_REQUEST['auth-token'] == $env['YANDEX_A
         ]);
     }
 
-    if($_REQUEST['action'] === 'order/check'){
+    if ($_REQUEST['action'] === 'order/check') {
 
         $order = json_decode($json, 1);
 
@@ -224,13 +227,13 @@ if(!empty($_REQUEST['auth-token']) &&  $_REQUEST['auth-token'] == $env['YANDEX_A
 
     }
 
-    if($_REQUEST['action'] === 'get/sku'){
+    if ($_REQUEST['action'] === 'get/sku') {
 
-        if($env['DEBUG']){ $logGetMarketSku->debug('Shop SKU ==>: '. $json); }
+        if($env['DEBUG']){ $logGet->debug('get SKU ==>: '. $json); }
 
         $skus = json_decode($json, 1);
 
-        $client = new GuzzleHttp\Client();
+        $client = new GuzzleHttp\Client(['handler' => $stack]);
 
         $url = $env['YANDEX_API_URL'].'/campaigns/'.$env['CAMPAIGN'].'/offer-mapping-entries.json?shop_sku='.$skus['sku'][0];
 
@@ -246,9 +249,59 @@ if(!empty($_REQUEST['auth-token']) &&  $_REQUEST['auth-token'] == $env['YANDEX_A
         if($res['status'] == 'OK'){
             echo $res['result']['offerMappingEntries'][0]['mapping']['marketSku'];
         } else {
-            echo null;
+            if ($env['DEBUG']) { $logGet->Error('get SKU ERROR <==: '. $response->getBody()); }
         }
 
+
+    }
+
+    if ($_REQUEST['action'] === 'get/prices') {
+
+        if ($env['DEBUG']) { $logGet->debug('get Prices ==>: '. $json); }
+
+        $client = new GuzzleHttp\Client(['handler' => $stack]);
+
+        $url = $env['YANDEX_API_URL'].'/campaigns/'.$env['CAMPAIGN'].'/offer-prices/suggestions.json';
+
+        $response = $client->request('POST', $url, [
+            'body' => $json,
+            'headers' => [
+                'Content-Type' => 'application/json',
+                'Authorization' => 'OAuth oauth_token="AQAAAAAsVzKzAAflIiUAn89MeERNiDYYpmClAPs", oauth_client_id="6088a34ebee24bc1b9001f29ff8bf8e6"',
+            ]
+        ]);
+
+        $res = json_decode($response->getBody(), 1);
+
+        if($res['status'] == 'OK'){
+            echo json_encode($res['result']['offers']);
+        } else {
+            if ($env['DEBUG']) { $logGet->Error('get Prices ERROR  <==: '. $response->getBody()); }
+        }
+
+    }
+
+    if ($_REQUEST['action'] === 'update/prices') {
+
+        if ($env['DEBUG']) { $logUpdate->debug('update Prices ==>: '. $json); }
+
+        $client = new GuzzleHttp\Client(['handler' => $stack]);
+
+        $url = $env['YANDEX_API_URL'].'/campaigns/'.$env['CAMPAIGN'].'/offer-prices/updates.json';
+
+        $response = $client->request('POST', $url, [
+            'body' => $json,
+            'headers' => [
+                'Content-Type' => 'application/json',
+                'Authorization' => 'OAuth oauth_token="AQAAAAAsVzKzAAflIiUAn89MeERNiDYYpmClAPs", oauth_client_id="6088a34ebee24bc1b9001f29ff8bf8e6"',
+            ]
+        ]);
+
+        $res = json_decode($response->getBody(), 1);
+
+        if($res['status'] != 'OK'){
+            if ($env['DEBUG']) { $logUpdate->Error('update Prices ERROR  <==: '. $response->getBody()); }
+        }
 
     }
 }
